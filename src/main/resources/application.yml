@@ -38,14 +38,6 @@ app:
     secret: ${JWT_SECRET}           # min 32 chars, set in env vars
     expiration-ms: 604800000        # 7 días
 
-  woocommerce:
-    base-url: ${WC_BASE_URL}        # https://nextech.cl/wp-json/wc/v3
-    consumer-key: ${WC_CONSUMER_KEY}
-    consumer-secret: ${WC_CONSUMER_SECRET}
-    sync-page-size: 100             # órdenes por página en sync
-    sync-interval-ms: 900000        # sync cada 15 minutos
-    sync-initial-delay-ms: 30000    # 30 s después del arranque
-
   lioren:
     base-url: ${LIOREN_BASE_URL:https://cl.lioren.enterprises/api}
     api-key: ${LIOREN_API_KEY:pendiente}

@@ -122,13 +122,6 @@ public class InvoiceController {
         return ResponseEntity.ok(Map.of("deleted", true));
     }
 
-    // ── Limpieza datos WooCommerce ────────────────────────────────────────
-    @DeleteMapping("/woocommerce")
-    public ResponseEntity<Map<String, Object>> deleteWooCommerce() {
-        int deleted = invoiceService.deleteWooCommerceData();
-        return ResponseEntity.ok(Map.of("deleted", deleted));
-    }
-
     // ── Limpieza datos Lioren ─────────────────────────────────────────────
     @DeleteMapping("/lioren")
     public ResponseEntity<Map<String, Object>> deleteLioren() {

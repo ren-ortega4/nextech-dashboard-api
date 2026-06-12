@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
@@ -45,13 +44,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     @Query("SELECT SUM(i.monto) FROM Invoice i WHERE i.nitStatus = 'pendiente'")
     Double sumMontoPendiente();
 
-    // ── Sync WooCommerce ──────────────────────────────────────────────
-
-    @Query("SELECT MAX(i.wcUpdatedAt) FROM Invoice i")
-    LocalDateTime findLastWcUpdatedAt();
-
-    @Query("SELECT i.id FROM Invoice i WHERE i.nitStatus = :status")
-    List<Long> findIdsByNitStatus(@Param("status") String status);
+    // ── Limpieza ──────────────────────────────────────────────────────
 
     @Query("SELECT i.id FROM Invoice i WHERE i.source = :source")
     List<Long> findIdsBySource(@Param("source") String source);

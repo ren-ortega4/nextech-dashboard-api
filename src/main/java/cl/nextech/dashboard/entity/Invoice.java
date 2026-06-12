@@ -41,10 +41,8 @@ public class Invoice {
     /** Teléfono */
     private String telefono;
 
-    /** Fecha de creación de la orden en WC */
     private LocalDateTime fechaCreacion;
 
-    /** Fecha de vencimiento (fechaCreacion + 30 días por defecto) */
     private LocalDateTime fechaVencimiento;
 
     /** Nombre del mes en español: "Enero", "Febrero"… */
@@ -54,49 +52,35 @@ public class Invoice {
     @Column(nullable = false)
     private Double monto;
 
-    /** Estado NIT: pendiente | pagada | vencida | revision | anulada */
     @Column(name = "nit_status", nullable = false)
     private String nitStatus;
 
-    /** Estado original de WooCommerce (processing, completed, etc.) */
+    /** Estado original del DTE en Lioren (acepta, rechaza, etc.) */
     @Column(name = "wc_status")
-    private String wcStatus;
+    private String dteEstado;
 
-    /** Flag de entrega física del producto */
     @Builder.Default
     private Boolean entregado = false;
 
-    /**
-     * Ítems de la orden almacenados como JSONB.
-     * Estructura: [{"desc":"...", "qty":1, "price":50000, "total":50000}]
-     */
     @Column(columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private String items;
 
-    /** Última vez que se actualizó en WC (para sync incremental) */
-    private LocalDateTime wcUpdatedAt;
-
-    /** Última sincronización desde WC */
     @Builder.Default
     private LocalDateTime syncedAt = LocalDateTime.now();
 
-    /** Última modificación en nuestra app */
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    /** Folio del DTE en Lioren */
     @Column(name = "lioren_folio")
     private String liorenFolio;
 
-    /** Tipo de documento Lioren: 33=Factura, 39=Boleta */
     @Column(name = "lioren_tipodoc")
     private String liorenTipodoc;
 
-    /** Fuente del registro: woocommerce | lioren */
     @Builder.Default
     @Column(name = "source", nullable = false)
-    private String source = "woocommerce";
+    private String source = "lioren";
 
     @PreUpdate
     public void preUpdate() {

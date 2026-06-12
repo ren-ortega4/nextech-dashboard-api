@@ -136,8 +136,8 @@ public class LiorenSyncService {
             inv.setMes(MONTHS_ES[fecha.getMonthValue()]);
         }
 
-        // ── Estado ───────────────────────────────────────────────────
-        inv.setWcStatus(dte.estado());
+        // ── Estado del DTE ───────────────────────────────────────────
+        inv.setDteEstado(dte.estado());
         if (inv.getNitStatus() == null) {
             inv.setNitStatus("pendiente");
         }

@@ -322,13 +322,6 @@ public class InvoiceService {
         }
     }
 
-    // ── Limpieza WooCommerce ─────────────────────────────────────────────
-
-    @Transactional
-    public int deleteWooCommerceData() {
-        return deleteBySource("woocommerce");
-    }
-
     // ── Limpieza Lioren ───────────────────────────────────────────────────
 
     @Transactional
