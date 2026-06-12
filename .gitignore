@@ -1,0 +1,31 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+
+# Spring Boot local config (contiene secrets)
+src/main/resources/application-local.yml
+src/main/resources/application-local.yaml
+
+# Variables de entorno
+.env
+.env.*
+
+# Archivos de upload local
+uploads/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
