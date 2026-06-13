@@ -8,6 +8,9 @@ import cl.nextech.dashboard.repository.InvoiceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,8 +69,17 @@ public class LiorenSyncService {
         return total;
     }
 
+    // ── Sync al arrancar ──────────────────────────────────────────────
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void syncOnStartup() {
+        log.info("Sync inicial Lioren al arrancar…");
+        incrementalSync();
+    }
+
     // ── Sync incremental (desde último folio conocido) ─────────────────
 
+    @Scheduled(fixedDelayString = "${app.lioren.sync-interval-ms:300000}")
     public int incrementalSync() {
         Integer lastFolio = invoiceRepo.findMaxLiorenFolio();
 

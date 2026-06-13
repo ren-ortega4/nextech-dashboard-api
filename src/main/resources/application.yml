@@ -44,6 +44,7 @@ app:
     tipo-doc: ${LIOREN_TIPODOC:33}        # 33=Factura, 39=Boleta
     sync-start-folio: ${LIOREN_START_FOLIO:1}   # folio desde donde empieza el sync completo
     sync-tipodoc: ${LIOREN_SYNC_TIPODOC:33}     # tipo de DTE a sincronizar
+    sync-interval-ms: ${LIOREN_SYNC_INTERVAL_MS:300000}  # intervalo sync automático (default 5 min)
 
   upload:
     dir: ${UPLOAD_DIR:uploads/retiro}
