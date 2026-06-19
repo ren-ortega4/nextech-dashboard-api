@@ -1,6 +1,6 @@
 # nextech-dashboard-api
 
-Backend REST API del sistema de gestión de facturas de NexTech / RS Tech Limitada. Expone endpoints para autenticación, gestión de facturas, sincronización con Lioren y carga de documentos de retiro.
+Backend REST API del sistema de gestión de facturas de NexTech / RS Tech Limitada. Expone endpoints para autenticación, gestión de facturas, sincronización con Lioren (DTEs electrónicos) y carga de documentos de retiro.
 
 ---
 
@@ -50,13 +50,15 @@ Configura las siguientes variables antes de ejecutar:
 
 | Variable | Descripción |
 |---|---|
-| `DB_URL` | URL de conexión PostgreSQL |
-| `DB_USERNAME` | Usuario de la base de datos |
-| `DB_PASSWORD` | Contraseña de la base de datos |
-| `JWT_SECRET` | Clave secreta para firmar tokens JWT |
-| `WC_URL` | URL base de la tienda WooCommerce |
-| `WC_KEY` | Consumer Key de la API de WooCommerce |
-| `WC_SECRET` | Consumer Secret de la API de WooCommerce |
+| `DATABASE_URL` | URL de conexión PostgreSQL (Neon) |
+| `DATABASE_USERNAME` | Usuario de la base de datos |
+| `DATABASE_PASSWORD` | Contraseña de la base de datos |
+| `JWT_SECRET` | Clave secreta para firmar tokens JWT (mín. 32 caracteres) |
+| `LIOREN_BASE_URL` | URL base de la API de Lioren |
+| `LIOREN_API_KEY` | API Key de Lioren |
+| `LIOREN_TIPODOC` | Tipo de documento (33=Factura, 39=Boleta) |
+| `UPLOAD_DIR` | Directorio local para documentos de retiro |
+| `CORS_ORIGINS` | Orígenes permitidos para CORS |
 
 ---
 
@@ -73,14 +75,18 @@ Configura las siguientes variables antes de ejecutar:
 | `PATCH` | `/api/v1/facturas/bulk` | Actualización masiva de estado |
 | `POST` | `/api/v1/facturas/:id/retiro` | Subir documento de retiro |
 | `DELETE` | `/api/v1/facturas/:id/retiro/:fileId` | Eliminar documento |
-| `POST` | `/api/v1/sync/full` | Sincronización completa con WooCommerce |
-| `POST` | `/api/v1/sync/incremental` | Sincronización incremental |
+| `GET` | `/api/v1/lioren/status` | Test de conexión con Lioren |
+| `POST` | `/api/v1/lioren/sync/full` | Sincronización completa de DTEs desde Lioren |
+| `POST` | `/api/v1/lioren/sync/incremental` | Sincronización incremental de DTEs |
+| `GET` | `/api/v1/lioren/facturas/:id/dte` | Consultar DTE de una factura |
+| `GET` | `/api/v1/lioren/dtes/:folio` | Consultar DTE por folio |
+| `GET` | `/api/v1/lioren/dtes/:folio/pdf` | Consultar DTE con PDF en base64 |
 
 ---
 
 ## Frontend relacionado
 
-El frontend que consume esta API es **nextech-dashboard-ui** — React 18 + Vite + TanStack Query.  
+El frontend que consume esta API es **nextech-dashboard-ui** — React 19 + Vite + TanStack Query.  
 Repositorio: https://github.com/ren-ortega4/nextech-dashboard-ui
 
 ---
