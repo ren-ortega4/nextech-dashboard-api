@@ -1,6 +1,6 @@
 # nextech-dashboard-api
 
-Backend REST API del sistema de gestión de facturas de NexTech / RS Tech Limitada. Expone endpoints para autenticación, gestión de facturas, sincronización con WooCommerce y carga de documentos de retiro.
+Backend REST API del sistema de gestión de facturas de NexTech / RS Tech Limitada. Expone endpoints para autenticación, gestión de facturas, sincronización con Lioren y carga de documentos de retiro.
 
 ---
 
