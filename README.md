@@ -13,7 +13,7 @@ Backend REST API del sistema de gestión de facturas de NexTech / RS Tech Limita
 | Spring Security + JWT | — | Autenticación con tokens JWT (jjwt 0.12.6) |
 | Spring Data JPA | — | ORM y acceso a base de datos |
 | PostgreSQL | — | Base de datos relacional (Neon cloud) |
-| Spring WebFlux | — | WebClient para llamadas a WooCommerce API |
+| Spring WebFlux | — | WebClient para llamadas a Lioren API |
 | Lombok | — | Reducción de boilerplate |
 | Maven | — | Gestión de dependencias y build |
 
