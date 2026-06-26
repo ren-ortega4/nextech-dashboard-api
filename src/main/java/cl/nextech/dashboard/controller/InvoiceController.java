@@ -28,8 +28,10 @@ public class InvoiceController {
 
     // ── Stats ─────────────────────────────────────────────────────────────
     @GetMapping("/stats")
-    public ResponseEntity<InvoiceStatsDto> stats() {
-        return ResponseEntity.ok(invoiceService.getStats());
+    public ResponseEntity<InvoiceStatsDto> stats(
+        @RequestParam(required = false) String source
+    ) {
+        return ResponseEntity.ok(invoiceService.getStats(source));
     }
 
     // ── Listado paginado ──────────────────────────────────────────────────
@@ -38,10 +40,11 @@ public class InvoiceController {
         @RequestParam(required = false) String status,
         @RequestParam(required = false) String mes,
         @RequestParam(required = false) String search,
+        @RequestParam(required = false) String source,
         @RequestParam(defaultValue = "0")  int page,
         @RequestParam(defaultValue = "20") int size
     ) {
-        Page<Invoice> result = invoiceService.listInvoices(status, mes, search, page, size);
+        Page<Invoice> result = invoiceService.listInvoices(status, mes, search, source, page, size);
         return ResponseEntity.ok(Map.of(
             "content",       result.getContent(),
             "totalElements", result.getTotalElements(),

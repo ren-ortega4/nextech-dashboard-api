@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +30,15 @@ public class LiorenSyncService {
 
     @Value("${app.lioren.sync-start-folio:1}")
     private int syncStartFolio;
+
+    @Value("${app.lioren.boleta-start-folio:1}")
+    private int boletaStartFolio;
+
+    @Value("${app.lioren.boleta-max-gap:500}")
+    private int boletaMaxGap;
+
+    private final AtomicBoolean boletaSyncRunning = new AtomicBoolean(false);
+    private final AtomicBoolean liorenSyncRunning = new AtomicBoolean(false);
 
     @Value("${app.lioren.sync-tipodoc:33}")
     private String syncTipodoc;
@@ -73,56 +83,106 @@ public class LiorenSyncService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void syncOnStartup() {
-        log.info("Sync inicial Lioren al arrancar…");
+        log.info("Sync inicial al arrancar…");
         incrementalSync();
+        boletasIncrementalSync();
     }
 
     // ── Sync incremental (desde último folio conocido) ─────────────────
 
     @Scheduled(fixedDelayString = "${app.lioren.sync-interval-ms:300000}")
     public int incrementalSync() {
-        Integer lastFolio = invoiceRepo.findMaxLiorenFolio();
-
-        if (lastFolio == null) {
-            log.info("No hay DTEs de Lioren en BD — iniciando sync completo.");
-            return fullSync();
+        if (!liorenSyncRunning.compareAndSet(false, true)) {
+            log.debug("Sync Lioren ya en curso, omitiendo.");
+            return 0;
         }
+        try {
+            Integer lastFolio = invoiceRepo.findMaxLiorenFolio();
 
-        int folio  = lastFolio + 1;
-        int total  = 0;
-        int noFoundConsecutivos = 0;
-
-        log.debug("Sync incremental Lioren desde folio {}", folio);
-
-        while (noFoundConsecutivos < 3) {
-            LiorenDteDto dte = liorenService.consultarDte(syncTipodoc, String.valueOf(folio));
-
-            if (dte == null) {
-                noFoundConsecutivos++;
-            } else {
-                noFoundConsecutivos = 0;
-                upsertFromDte(dte);
-                total++;
+            if (lastFolio == null) {
+                log.info("No hay DTEs de Lioren en BD — iniciando sync completo.");
+                return fullSync();
             }
-            folio++;
-        }
 
-        if (total > 0) log.info("Sync incremental Lioren: {} DTEs nuevos.", total);
-        return total;
+            int folio  = lastFolio + 1;
+            int total  = 0;
+            int noFoundConsecutivos = 0;
+
+            log.debug("Sync incremental Lioren desde folio {}", folio);
+
+            while (noFoundConsecutivos < 3) {
+                LiorenDteDto dte = liorenService.consultarDte(syncTipodoc, String.valueOf(folio));
+                if (dte == null) {
+                    noFoundConsecutivos++;
+                } else {
+                    noFoundConsecutivos = 0;
+                    upsertFromDte(dte);
+                    total++;
+                }
+                folio++;
+                sleep(300);
+            }
+
+            if (total > 0) log.info("Sync incremental Lioren: {} DTEs nuevos.", total);
+            return total;
+        } finally {
+            liorenSyncRunning.set(false);
+        }
+    }
+
+    // ── Sync incremental boletas ──────────────────────────────────────
+
+    @Scheduled(fixedDelayString = "${app.lioren.sync-interval-ms:300000}")
+    public int boletasIncrementalSync() {
+        if (!boletaSyncRunning.compareAndSet(false, true)) {
+            log.debug("Sync boletas ya en curso, omitiendo.");
+            return 0;
+        }
+        try {
+            Integer lastFolio = invoiceRepo.findMaxBoletaFolio();
+
+            int folio  = (lastFolio != null) ? lastFolio + 1 : boletaStartFolio;
+            int total  = 0;
+            int noFoundConsecutivos = 0;
+
+            log.debug("Sync incremental boletas desde folio {}", folio);
+
+            while (noFoundConsecutivos < boletaMaxGap) {
+                LiorenDteDto dte = liorenService.consultarBoleta(String.valueOf(folio));
+                if (dte == null) {
+                    noFoundConsecutivos++;
+                } else {
+                    noFoundConsecutivos = 0;
+                    upsertFromDte(dte, "boleta");
+                    total++;
+                }
+                folio++;
+                sleep(300);
+            }
+
+            if (total > 0) log.info("Sync incremental boletas: {} nuevas.", total);
+            return total;
+        } finally {
+            boletaSyncRunning.set(false);
+        }
     }
 
     // ── Crear o actualizar Invoice desde un DTE de Lioren ─────────────
 
     @Transactional
     public void upsertFromDte(LiorenDteDto dte) {
-        // Usamos el id interno de Lioren como PK
+        upsertFromDte(dte, "lioren");
+    }
+
+    @Transactional
+    public void upsertFromDte(LiorenDteDto dte, String source) {
         Long invoiceId = dte.id();
         boolean isNew  = !invoiceRepo.existsById(invoiceId);
 
         Invoice inv = invoiceRepo.findById(invoiceId)
             .orElse(Invoice.builder()
                 .id(invoiceId)
-                .source("lioren")
+                .source(source)
                 .nitStatus("pendiente")
                 .entregado(false)
                 .build());
@@ -207,6 +267,18 @@ public class LiorenSyncService {
     }
 
     private String escape(String s) {
-        return s == null ? "" : s.replace("\"", "\\\"");
+        if (s == null) return "";
+        StringBuilder out = new StringBuilder(s.length() + 16);
+        for (char c : s.toCharArray()) {
+            if      (c == '"')  out.append("\\\"");
+            else if (c == '\\') out.append("\\\\");
+            else if (c < 0x20)  out.append(String.format("\\u%04x", (int) c));
+            else                out.append(c);
+        }
+        return out.toString();
+    }
+
+    private void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }

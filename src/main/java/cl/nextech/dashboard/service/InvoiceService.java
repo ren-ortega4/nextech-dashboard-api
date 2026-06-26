@@ -58,14 +58,16 @@ public class InvoiceService {
 
     // ── Stats ───────────────────────────────────────────────────────────
 
-    public InvoiceStatsDto getStats() {
-        long total      = invoiceRepo.count();
-        long pendiente  = invoiceRepo.countByNitStatus("pendiente");
-        long pagada     = invoiceRepo.countByNitStatus("pagada");
-        long vencida    = invoiceRepo.countByNitStatus("vencida");
-        long revision   = invoiceRepo.countByNitStatus("revision");
-        long anulada    = invoiceRepo.countByNitStatus("anulada");
-        Double rawMonto = invoiceRepo.sumMontoPendiente();
+    public InvoiceStatsDto getStats(String source) {
+        boolean filtered = source != null && !source.isBlank();
+
+        long total     = filtered ? invoiceRepo.countBySource(source) : invoiceRepo.count();
+        long pendiente = filtered ? invoiceRepo.countByNitStatusAndSource("pendiente", source) : invoiceRepo.countByNitStatus("pendiente");
+        long pagada    = filtered ? invoiceRepo.countByNitStatusAndSource("pagada",    source) : invoiceRepo.countByNitStatus("pagada");
+        long vencida   = filtered ? invoiceRepo.countByNitStatusAndSource("vencida",   source) : invoiceRepo.countByNitStatus("vencida");
+        long revision  = filtered ? invoiceRepo.countByNitStatusAndSource("revision",  source) : invoiceRepo.countByNitStatus("revision");
+        long anulada   = filtered ? invoiceRepo.countByNitStatusAndSource("anulada",   source) : invoiceRepo.countByNitStatus("anulada");
+        Double rawMonto = filtered ? invoiceRepo.sumMontoPendienteBySource(source) : invoiceRepo.sumMontoPendiente();
         double montoPendiente = rawMonto != null ? rawMonto : 0.0;
 
         return new InvoiceStatsDto(total, pendiente, pagada, vencida, revision, anulada, montoPendiente);
@@ -74,7 +76,7 @@ public class InvoiceService {
     // ── Listado paginado ────────────────────────────────────────────────
 
     public Page<Invoice> listInvoices(String status, String mes, String search,
-                                      int page, int size) {
+                                      String source, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size,
             Sort.by(Sort.Direction.DESC, "fechaCreacion"));
 
@@ -82,6 +84,7 @@ public class InvoiceService {
             (status  != null && !status.isBlank())  ? status  : null,
             (mes     != null && !mes.isBlank())      ? mes     : null,
             (search  != null && !search.isBlank())   ? search.toLowerCase() : null,
+            (source  != null && !source.isBlank())   ? source  : null,
             pageable
         );
     }

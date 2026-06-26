@@ -23,6 +23,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
         SELECT i FROM Invoice i
         WHERE (:status IS NULL OR i.nitStatus = :status)
           AND (:mes    IS NULL OR i.mes       = :mes)
+          AND (:source IS NULL OR i.source    = :source)
           AND (CAST(:search AS String) IS NULL OR
                LOWER(i.cliente) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')) OR
                LOWER(i.empresa) LIKE LOWER(CONCAT('%', CAST(:search AS String), '%')) OR
@@ -34,6 +35,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
         @Param("status") String status,
         @Param("mes")    String mes,
         @Param("search") String search,
+        @Param("source") String source,
         Pageable pageable
     );
 
@@ -41,8 +43,15 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     long countByNitStatus(String nitStatus);
 
+    long countByNitStatusAndSource(String nitStatus, String source);
+
+    long countBySource(String source);
+
     @Query("SELECT SUM(i.monto) FROM Invoice i WHERE i.nitStatus = 'pendiente'")
     Double sumMontoPendiente();
+
+    @Query("SELECT SUM(i.monto) FROM Invoice i WHERE i.nitStatus = 'pendiente' AND i.source = :source")
+    Double sumMontoPendienteBySource(@Param("source") String source);
 
     // ── Limpieza ──────────────────────────────────────────────────────
 
@@ -55,6 +64,9 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     @Query("SELECT MAX(CAST(i.liorenFolio AS int)) FROM Invoice i WHERE i.source = 'lioren' AND i.liorenFolio IS NOT NULL")
     Integer findMaxLiorenFolio();
+
+    @Query("SELECT MAX(CAST(i.liorenFolio AS int)) FROM Invoice i WHERE i.source = 'boleta' AND i.liorenFolio IS NOT NULL")
+    Integer findMaxBoletaFolio();
 
     boolean existsByLiorenFolioAndSource(String liorenFolio, String source);
 }

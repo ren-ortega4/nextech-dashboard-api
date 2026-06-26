@@ -16,18 +16,25 @@ public class LiorenService {
 
     private final InvoiceRepository invoiceRepo;
     private final WebClient         liorenClient;
+    private final WebClient         boletasClient;
 
     @Value("${app.lioren.tipo-doc:33}")
-    private String tipodoc; // 33 = Factura electrónica
+    private String tipodoc;
 
     public LiorenService(
         InvoiceRepository invoiceRepo,
         @Value("${app.lioren.base-url:https://cl.lioren.enterprises/api}") String baseUrl,
+        @Value("${app.lioren.boletas-base-url:https://www.lioren.cl/api}") String boletasBaseUrl,
         @Value("${app.lioren.api-key:pendiente}") String apiKey
     ) {
         this.invoiceRepo  = invoiceRepo;
         this.liorenClient = WebClient.builder()
             .baseUrl(baseUrl)
+            .defaultHeader("Authorization", "Bearer " + apiKey)
+            .defaultHeader("Content-Type", "application/json")
+            .build();
+        this.boletasClient = WebClient.builder()
+            .baseUrl(boletasBaseUrl)
             .defaultHeader("Authorization", "Bearer " + apiKey)
             .defaultHeader("Content-Type", "application/json")
             .build();
@@ -51,6 +58,24 @@ public class LiorenService {
                 .block();
         } catch (Exception e) {
             log.debug("DTE folio {} no encontrado: {}", folio, e.getMessage());
+            return null;
+        }
+    }
+
+    // ── Consultar Boleta por folio ────────────────────────────────────
+
+    public LiorenDteDto consultarBoleta(String folio) {
+        try {
+            return boletasClient.get()
+                .uri(u -> u.path("/boletas")
+                    .queryParam("tipodoc", "39")
+                    .queryParam("folio",   folio)
+                    .build())
+                .retrieve()
+                .bodyToMono(LiorenDteDto.class)
+                .block();
+        } catch (Exception e) {
+            log.debug("Boleta folio {} no encontrada: {}", folio, e.getMessage());
             return null;
         }
     }
