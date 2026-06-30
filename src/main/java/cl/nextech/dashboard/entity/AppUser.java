@@ -33,4 +33,7 @@ public class AppUser {
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private String        resetToken;
+    private LocalDateTime resetTokenExpiry;
 }
